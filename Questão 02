@@ -1,0 +1,91 @@
+from operator import itemgetter
+
+def carregar_candidatos(arquivo):
+    dados = []
+    with open(arquivo) as f:
+        for linha in f.readlines():
+            nomes, numeros, partido, coligacao, votos = linha.strip().split(';')
+            if "'" in coligacao:
+                coligacao = coligacao - "'"            
+            dados.append(
+                {
+                    "Número": int(numeros),
+                    "Nome do Candidato": nomes,
+                    "Votos": int(votos),
+                    "Partido": partido,
+                    "coligação": coligacao,
+                }
+            )
+
+    return dados
+
+def carregar_coligacoes(arquivos, cadeiras):
+    
+    coligacao = []
+    ordenado = sorted(arquivos, key=itemgetter('coligação'), reverse= True)
+
+    for linha in ordenado:
+        if linha['coligação'] not in coligacao:
+            coligacao.append(linha['coligação'])
+
+    votos_validos = 0
+    for c in range(0, len(coligacao)):
+        soma = 0
+        for d in ordenado:
+            if coligacao[c] == d['coligação']:
+                soma += d['Votos']
+        votos_validos += soma
+
+    dados_da_coligacao = []
+    sobras = []
+    tot_qp = c = n = 0
+    for i in coligacao:
+        soma = 0
+        for d in ordenado:
+            if i == d['coligação']:
+                soma += d['Votos']
+        s = soma
+        qe = round(votos_validos/int(cadeiras)) 
+        if s < qe:
+            qp = 0
+        else:
+            qp = round(s/qe)
+            if tot_qp < int(cadeiras):
+                if qp == 0:
+                    qp = 0
+                else:
+                    c = round(s/qp+1)
+                    sobras.append([c, i])
+
+        dados_da_coligacao.append(
+            {
+                "Coligação": i,
+                "Total de Votos": int(s),
+                "Total de Vagas": int(qp),
+                "Sobra": c,
+            }
+        )
+    
+    ordem = sorted(dados_da_coligacao, key=itemgetter('Total de Vagas','Total de Votos'), reverse= True)
+    mai = max(sobras)
+    print('DADOS DAS COLIGAÇÕES')
+    print('Coligação                                         Total de Votos    Total de Vagas')
+    for i in ordem:
+        if mai[1] == i['Coligação']:
+            i['Total de Vagas'] += 1
+        print(f"{i['Coligação']:<55} {i['Total de Votos']:>8} {i['Total de Vagas']:>17}")
+
+    
+def main():
+    nome = input().strip()
+    CADEIRAS = input()
+    candidatos = carregar_candidatos(nome)
+    coligacoes = carregar_coligacoes(candidatos, CADEIRAS)
+
+    '''distribuir_vagas(coligacoes, candidatos)
+
+    mostrar_resultado(candidatos)'''
+
+
+if __name__=='__main__':
+    main()
